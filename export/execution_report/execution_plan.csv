@@ -1,0 +1,11 @@
+Action,Symbol,Shares,Best Date,Session,Price (VND),Value (VND),Open-to-Close %,Note
+SELL,FPT,4000,20/04/2026,ATO 09:00-09:15 (open higher than close),76900,307600000,-0.60%,"Peak in window, +0.0% vs 20/04."
+SELL,SZC,6000,20/04/2026,ATO 09:00-09:15 (open higher than close),29000,174000000,-1.09%,"Peak in window, +0.0% vs 20/04."
+SELL,DGC,3000,06/05/2026,ATO 09:00-09:15 (open higher than close),55800,167400000,-0.64%,"Peak in window, +5.1% vs 20/04."
+SELL,FTS,5000,20/04/2026,ATO 09:00-09:15 (open higher than close),27500,137500000,-0.92%,"Peak in window, +0.0% vs 20/04."
+SELL,VPB,5000,07/05/2026,ATO 09:00-09:15 (open higher than close),28150,140750000,-0.14%,"Peak in window, +0.4% vs 20/04."
+BUY,SIP,2700,23/04/2026,ATC 14:30-14:45 (close lower than open),58200,157140000,-0.20%,Lowest in window (-5.1% vs 20/04).
+BUY,VTP,2500,11/05/2026,ATC 14:30-14:45 (close lower than open),63200,158000000,-0.96%,Lowest in window (-10.7% vs 20/04).
+BUY,CTR,1900,11/05/2026,ATC 14:30-14:45 (close lower than open),82300,156370000,-0.53%,Lowest in window (-5.5% vs 20/04).
+BUY,VHC,1800,07/05/2026,ATC 14:30-14:45 (close lower than open),60500,108900000,-0.28%,Lowest in window (-3.5% vs 20/04).
+BUY MORE,FPT,500,11/05/2026,ATC 14:30-14:45 (close lower than open),70000,35000000,-0.60%,"Holding 4,000 → 4,500 shares (35.1%). Delta: +500."
