@@ -255,9 +255,75 @@ def main():
     exec_plan.to_excel(REPORT_DIR / "execution_plan.xlsx", index=False)
     (prices.round(0).astype(int) * 1000).to_csv(REPORT_DIR / "daily_prices.csv")
     plot_daily_tracking(values)
+
+    # ── Post-restructuring evaluation @ 20/05 ──
+    evaluate_at_may20()
+
     print(f"\n✅ Reports: {REPORT_DIR}/")
     for f in sorted(REPORT_DIR.glob("*")):
         print(f"   {f.name}")
+
+
+def evaluate_at_may20():
+    """Compute portfolio value at May 20 and compare vs Monte Carlo expected."""
+    EVAL_DATE = "2026-05-20"
+    MC_EXPECTED_30D = 0.0196  # from risk engine
+
+    mkt = Market()
+    K = 1000
+
+    print(f"\n{'='*60}")
+    print(f"  POST-RESTRUCTURING EVALUATION @ {EVAL_DATE}")
+    print(f"{'='*60}")
+
+    # New portfolio at May 20
+    new_total = 0
+    new_rows = []
+    for sym, weight in NEW_WEIGHTS.items():
+        df0 = mkt.equity(sym).ohlcv(start="2026-04-20", end="2026-04-20")
+        p0 = df0["close"].iloc[0] * K
+        # Compute actual shares held
+        if sym in OLD_STOCKS and sym == "FPT":
+            shares = OLD_SHARES[sym] + BUY_SHARES.get(sym, 0)
+        elif sym in OLD_STOCKS:
+            continue  # sold
+        else:
+            shares = BUY_SHARES.get(sym, 0)
+
+        df1 = mkt.equity(sym).ohlcv(start=EVAL_DATE, end=EVAL_DATE)
+        p1 = df1["close"].iloc[0] * K
+        val = shares * p1
+        new_total += val
+        chg = (p1/p0 - 1) * 100
+        new_rows.append((sym, shares, p0, p1, val, chg))
+
+    # Old portfolio at May 20 (if held)
+    old_total = 0
+    for sym, shares in OLD_SHARES.items():
+        df1 = mkt.equity(sym).ohlcv(start=EVAL_DATE, end=EVAL_DATE)
+        p1 = df1["close"].iloc[0] * K
+        old_total += shares * p1
+
+    print(f"\n  NEW PORTFOLIO @ {EVAL_DATE}:")
+    print(f"  {'Ticker':<6} {'Shares':>8} {'Price@20/04':>12} {'Price@20/05':>12} {'Value':>15} {'Chg':>8}")
+    print(f"  {'-'*62}")
+    for sym, sh, p0, p1, val, chg in new_rows:
+        print(f"  {sym:<6} {sh:>8,} {p0:>12,.0f} {p1:>12,.0f} {val:>15,.0f} {chg:>7.1f}%")
+    print(f"  {'-'*62}")
+    print(f"  {'TOTAL':<6} {'':>8} {'':>12} {'':>12} {new_total:>15,.0f} {(new_total/TOTAL_CAPITAL-1)*100:>7.1f}%")
+
+    actual_return = new_total / TOTAL_CAPITAL - 1
+    beat = actual_return - MC_EXPECTED_30D
+
+    print(f"\n  OLD PORTFOLIO (if held): {old_total:,.0f} VND ({(old_total/TOTAL_CAPITAL-1)*100:+.1f}%)")
+    print(f"  Alpha (New - Old):       {new_total - old_total:+,.0f} VND")
+    print(f"\n  📊 Monte Carlo expected 30d: {MC_EXPECTED_30D*100:+.2f}%")
+    print(f"  📊 Actual 30d return:        {actual_return*100:+.2f}%")
+    print(f"  📊 Beat by:                  {beat*100:+.2f}pp ({actual_return/MC_EXPECTED_30D:.1f}x)")
+
+    # Save
+    perf_df = pd.DataFrame(new_rows, columns=["Ticker","Shares","Price@20/04","Price@20/05","Value","Change%"])
+    perf_df.to_csv(REPORT_DIR / "performance_20May.csv", index=False, float_format="%.2f")
 
 
 if __name__ == "__main__":
