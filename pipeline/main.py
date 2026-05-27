@@ -15,6 +15,8 @@ import time
 import numpy as np
 import pandas as pd
 
+np.random.seed(42)  # reproducibility
+
 from pipeline.data_ingestion import (
     get_vn100_symbols, fetch_vn100_ohlcv, fetch_vnindex_ohlcv,
     build_close_matrix, compute_log_returns, compute_vnindex_log_returns,

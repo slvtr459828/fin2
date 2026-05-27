@@ -28,6 +28,15 @@ CHECKPOINT_FILE   = DATA_DIR / "_checkpoint.json"
 # ── Bond yield CSV (user-provided) ───────────────────────────────────────
 BOND_YIELD_CSV = ROOT_DIR / "Dữ liệu Lịch sử Suất Thu lợi Trái phiếu 10 Năm Việt Nam.csv"
 
+# ── Final portfolio (locked after committee decision) ────────────────────
+FINAL_PORTFOLIO = {
+    "FPT": 0.3511,
+    "SIP": 0.1781,
+    "VTP": 0.1750,
+    "CTR": 0.1723,
+    "VHC": 0.1235,
+}
+
 # ── Forward-looking assumptions ──────────────────────────────────────────
 E_Rm   = 0.12    # Kỳ vọng VN-Index 2026: +12%
 E_SMB  = 0.02    # Size premium: Small - Big

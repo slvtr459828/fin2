@@ -94,19 +94,28 @@ def _plot_ef(optimizer, path: str):
     frontier_ret, frontier_risk = [], []
     for t in targets:
         try:
-            w = optimizer.solve(rf=0.04, min_weights={})
+            w = optimizer.solve(mode="target_return", target_return=t, rf=0.04)
             frontier_ret.append(w @ mu)
             frontier_risk.append(np.sqrt(w @ Sigma @ w))
         except Exception:
             pass
+
+    # Re-solve max Sharpe for the gold star dot
+    try:
+        w_opt = optimizer.solve(mode="max_sharpe", rf=0.04)
+    except Exception:
+        w_opt = None
 
     fig, ax = plt.subplots(figsize=(10, 6))
     ax.scatter(np.sqrt(np.diag(Sigma)), mu, c="steelblue", alpha=0.5, s=30)
     if frontier_risk:
         ax.plot(frontier_risk, frontier_ret, "r-", lw=2, label="Efficient Frontier")
 
-    if optimizer._last_weights is not None:
-        w = optimizer._last_weights
+    if w_opt is not None:
+        rp_opt = w_opt @ mu
+        sp_opt = np.sqrt(w_opt @ Sigma @ w_opt)
+        ax.scatter([sp_opt], [rp_opt], c="gold", s=150,
+                   edgecolors="black", zorder=5, label="Max Sharpe")
         ax.scatter([np.sqrt(w @ Sigma @ w)], [w @ mu], c="gold", s=150,
                    edgecolors="black", zorder=5, label="Optimal")
 

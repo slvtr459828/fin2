@@ -1,11 +1,10 @@
-Action,Symbol,Shares,Best Date,Session,Price (VND),Value (VND),Open-to-Close %,Note
-SELL,FPT,4000,20/04/2026,ATO 09:00-09:15 (open higher than close),76900,307600000,-0.60%,"Peak in window, +0.0% vs 20/04."
-SELL,SZC,6000,20/04/2026,ATO 09:00-09:15 (open higher than close),29000,174000000,-1.09%,"Peak in window, +0.0% vs 20/04."
-SELL,DGC,3000,06/05/2026,ATO 09:00-09:15 (open higher than close),55800,167400000,-0.64%,"Peak in window, +5.1% vs 20/04."
-SELL,FTS,5000,20/04/2026,ATO 09:00-09:15 (open higher than close),27500,137500000,-0.92%,"Peak in window, +0.0% vs 20/04."
-SELL,VPB,5000,07/05/2026,ATO 09:00-09:15 (open higher than close),28150,140750000,-0.14%,"Peak in window, +0.4% vs 20/04."
-BUY,SIP,2700,23/04/2026,ATC 14:30-14:45 (close lower than open),58200,157140000,-0.20%,Lowest in window (-5.1% vs 20/04).
-BUY,VTP,2500,11/05/2026,ATC 14:30-14:45 (close lower than open),63200,158000000,-0.96%,Lowest in window (-10.7% vs 20/04).
-BUY,CTR,1900,11/05/2026,ATC 14:30-14:45 (close lower than open),82300,156370000,-0.53%,Lowest in window (-5.5% vs 20/04).
-BUY,VHC,1800,07/05/2026,ATC 14:30-14:45 (close lower than open),60500,108900000,-0.28%,Lowest in window (-3.5% vs 20/04).
-BUY MORE,FPT,500,11/05/2026,ATC 14:30-14:45 (close lower than open),70000,35000000,-0.60%,"Holding 4,000 → 4,500 shares (35.1%). Delta: +500."
+Execution Date,Session,Action,Ticker,Volume (Shares),Strategic Rationale & Slippage Control
+"April 20, 2026",ATO,SELL,SZC,6000,Full exit. Open-to-Close slippage minimized at -1.09%.
+"April 20, 2026",ATO,SELL,FTS,5000,Full exit. Open-to-Close slippage minimized at -0.91%.
+"April 23, 2026",ATC,BUY,SIP,2900,Initial satellite deployment. Executed on technical support. Slippage at -0.20%.
+"May 06, 2026",ATO,SELL,DGC,3000,Full exit. Executed into structural strength (-0.64% slippage).
+"May 07, 2026",ATO,SELL,VPB,5000,Full exit. Open-to-Close slippage minimized at -0.13%.
+"May 07, 2026",ATC,BUY,VHC,1800,Satellite deployment into defensive export sector. Slippage at -0.28%.
+"May 11, 2026",ATC,BUY,VTP,2500,Satellite deployment capturing logistics growth factor. Slippage at -0.96%.
+"May 11, 2026",ATC,BUY,CTR,1900,Satellite deployment capturing telecom infrastructure factor. Slippage at -0.53%.
+"May 11, 2026",ATC,BUY MORE,FPT,500,Final top-up to lock the defensive anchor weight at 35.11%. Slippage at -0.60%.

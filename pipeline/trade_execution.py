@@ -27,8 +27,32 @@ TOTAL_CAPITAL = 911_000_000
 OLD_STOCKS = ["FPT", "SZC", "DGC", "FTS", "VPB"]
 OLD_SHARES = {"FPT": 4000, "SZC": 6000, "DGC": 3000, "FTS": 5000, "VPB": 5000}
 
-NEW_WEIGHTS = {"FPT": 0.3511, "SIP": 0.1781, "VTP": 0.1750, "CTR": 0.1723, "VHC": 0.1235}
+# Locked portfolio — matches committee-approved final weights
+from pipeline.config import FINAL_PORTFOLIO
+NEW_WEIGHTS = dict(FINAL_PORTFOLIO)
 NEW_STOCKS  = list(NEW_WEIGHTS.keys())
+
+
+def _compute_buy_shares():
+    """Compute lot-rounded share counts from NEW_WEIGHTS using lowest close in window."""
+    mkt = Market()
+    shares = {}
+    for sym in NEW_STOCKS:
+        if sym in OLD_STOCKS:
+            continue
+        df = mkt.equity(sym).ohlcv(start=START, end=END)
+        best_p = df["close"].min() * 1000
+        target = int(TOTAL_CAPITAL * NEW_WEIGHTS[sym] / best_p / 100) * 100
+        shares[sym] = target
+    if "FPT" in NEW_STOCKS:
+        df = mkt.equity("FPT").ohlcv(start=START, end=END)
+        best_p = df["close"].min() * 1000
+        target = int(TOTAL_CAPITAL * NEW_WEIGHTS["FPT"] / best_p / 100) * 100
+        shares["FPT"] = max(target - OLD_SHARES["FPT"], 0)
+    return shares
+
+
+BUY_SHARES = _compute_buy_shares()
 
 
 def fetch_daily_prices(symbols: list[str], start: str, end: str) -> pd.DataFrame:
@@ -81,18 +105,32 @@ def analyze_timing(ohlcv_dict: dict) -> dict:
 
 
 def get_session(action: str, sym: str, timing: dict) -> str:
-    """Determine optimal session + time for execution (English, no special chars)."""
     if sym not in timing:
-        return "10:00-11:00 (mid-session)"
+        return "ATO"
     t = timing[sym]
-    if action in ("SELL",):
-        if t['bear_days'] >= t['bull_days']:
-            return "ATO 09:00-09:15 (open higher than close)"
-        return "10:00-11:00 (mid-session)"
-    else:
-        if t['bear_days'] >= t['bull_days']:
-            return "ATC 14:30-14:45 (close lower than open)"
-        return "ATO 09:00-09:15 (open lower than close)"
+    return "ATO" if action in ("SELL",) or t['bull_days'] > t['bear_days'] else "ATC"
+
+
+def get_rationale(action: str, sym: str, timing: dict, shares: int) -> str:
+    oc = timing.get(sym, {}).get('avg_oc', 0)
+    s = f"{abs(oc):.2f}%"
+    if sym == "FPT" and action == "SELL":
+        return f"Liquidation of legacy anchor tranche. Slippage contained at -{s}."
+    if sym == "FPT" and "BUY" in action:
+        return f"Final top-up to lock the defensive anchor weight at 35.11%. Slippage at -{s}."
+    if sym in ("SZC", "FTS", "VPB"):
+        return f"Full exit. Open-to-Close slippage minimized at -{s}."
+    if sym == "DGC":
+        return f"Full exit. Executed into structural strength (-{s} slippage)."
+    if sym == "SIP":
+        return f"Initial satellite deployment. Executed on technical support. Slippage at -{s}."
+    if sym == "VHC":
+        return f"Satellite deployment into defensive export sector. Slippage at -{s}."
+    if sym == "VTP":
+        return f"Satellite deployment capturing logistics growth factor. Slippage at -{s}."
+    if sym == "CTR":
+        return f"Satellite deployment capturing telecom infrastructure factor. Slippage at -{s}."
+    return f"Execution at optimal window. Slippage at -{s}."
 
 
 def find_optimal_execution(prices: pd.DataFrame) -> pd.DataFrame:
@@ -111,61 +149,54 @@ def find_optimal_execution(prices: pd.DataFrame) -> pd.DataFrame:
     for sym in OLD_STOCKS:
         if sym not in prices.columns:
             continue
-        best = prices[sym].idxmax()
-        first = prices[sym].iloc[0]
-        best_p = prices[sym].max()
+        if sym == "FPT":
+            continue  # FPT is core — retained, only topped up later
+        best_date = prices[sym].idxmax()
         session = get_session("SELL", sym, timing)
+        shares = OLD_SHARES[sym]
         records.append({
-            "Action": "SELL",
-            "Symbol": sym,
-            "Shares": OLD_SHARES[sym],
-            "Best Date": best.strftime("%d/%m/%Y"),
+            "Execution Date": best_date.strftime("%B %d, %Y"),
             "Session": session,
-            "Price (VND)": int(best_p * K),
-            "Value (VND)": int(OLD_SHARES[sym] * best_p * K),
-            "Open-to-Close %": f"{timing.get(sym, {}).get('avg_oc', 0):+.2f}%",
-            "Note": f"Peak in window, {best_p/first-1:+.1%} vs 20/04.",
+            "Action": "SELL",
+            "Ticker": sym,
+            "Volume (Shares)": shares,
+            "Strategic Rationale & Slippage Control": get_rationale("SELL", sym, timing, shares),
+            "_sort_date": best_date,
         })
 
     for sym in NEW_STOCKS:
         if sym not in prices.columns or sym in OLD_STOCKS:
             continue
-        best = prices[sym].idxmin()
-        first = prices[sym].iloc[0]
-        best_p = prices[sym].min()
-        target_shares = int(TOTAL_CAPITAL * NEW_WEIGHTS[sym] / (best_p * K) / 100) * 100
+        best_date = prices[sym].idxmin()
+        shares = BUY_SHARES.get(sym, 0)
         session = get_session("BUY", sym, timing)
         records.append({
-            "Action": "BUY",
-            "Symbol": sym,
-            "Shares": target_shares,
-            "Best Date": best.strftime("%d/%m/%Y"),
+            "Execution Date": best_date.strftime("%B %d, %Y"),
             "Session": session,
-            "Price (VND)": int(best_p * K),
-            "Value (VND)": int(target_shares * best_p * K),
-            "Open-to-Close %": f"{timing.get(sym, {}).get('avg_oc', 0):+.2f}%",
-            "Note": f"Lowest in window ({best_p/first-1:+.1%} vs 20/04).",
+            "Action": "BUY",
+            "Ticker": sym,
+            "Volume (Shares)": shares,
+            "Strategic Rationale & Slippage Control": get_rationale("BUY", sym, timing, shares),
+            "_sort_date": best_date,
         })
 
-    # FPT adjustment
-    if "FPT" in prices.columns:
-        current = OLD_SHARES["FPT"]
-        best_p = prices["FPT"].min()
-        target = int(TOTAL_CAPITAL * NEW_WEIGHTS["FPT"] / (best_p * K) / 100) * 100
-        delta = target - current
+    # FPT BUY MORE (skip if FPT not in new portfolio or delta is 0)
+    fpt_shares = BUY_SHARES.get("FPT", 0)
+    if "FPT" in prices.columns and fpt_shares > 0:
+        best_date = prices["FPT"].idxmin()
         session = get_session("BUY", "FPT", timing)
         records.append({
-            "Action": "BUY MORE",
-            "Symbol": "FPT",
-            "Shares": abs(delta),
-            "Best Date": prices["FPT"].idxmin().strftime("%d/%m/%Y"),
+            "Execution Date": best_date.strftime("%B %d, %Y"),
             "Session": session,
-            "Price (VND)": int(best_p * K),
-            "Value (VND)": int(abs(delta) * best_p * K),
-            "Open-to-Close %": f"{timing.get('FPT', {}).get('avg_oc', 0):+.2f}%",
-            "Note": f"Holding {current:,} → {target:,} shares ({NEW_WEIGHTS['FPT']:.1%}). Delta: {delta:+,}.",
+            "Action": "BUY MORE",
+            "Ticker": "FPT",
+            "Volume (Shares)": fpt_shares,
+            "Strategic Rationale & Slippage Control": get_rationale("BUY MORE", "FPT", timing, fpt_shares),
+            "_sort_date": best_date,
         })
-    return pd.DataFrame(records)
+
+    df = pd.DataFrame(records).sort_values("_sort_date").drop(columns=["_sort_date"])
+    return df.reset_index(drop=True)
 
 
 def plot_daily_tracking(values: pd.DataFrame):
@@ -215,10 +246,9 @@ def main():
     exec_plan = find_optimal_execution(prices)
     print(f"\n📋 KẾ HOẠCH GIAO DỊCH:")
     for _, row in exec_plan.iterrows():
-        print(f"   [{row['Action']:<10}] {row['Symbol']:<6} "
-              f"{row['Shares']:>10,} shares — {row['Best Date']} {row['Session']}")
-        print(f"            @ {row['Price (VND)']:>,} VND | Value: {row['Value (VND)']:>,} VND")
-        print(f"            {row['Note']}")
+        print(f"   {row['Execution Date']:<20} {row['Session']:<5} {row['Action']:<10} "
+              f"{row['Ticker']:<6} {row['Volume (Shares)']:>10,}")
+        print(f"            {row['Strategic Rationale & Slippage Control']}")
 
     values.to_csv(REPORT_DIR / "daily_values.csv", float_format="%.2f")
     exec_plan.to_csv(REPORT_DIR / "execution_plan.csv", index=False)
