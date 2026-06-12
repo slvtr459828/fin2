@@ -6,7 +6,7 @@ from pathlib import Path
 
 # ── Dates ────────────────────────────────────────────────────────────────
 START_DATE = "2021-01-01"
-END_DATE   = "2026-05-11"
+END_DATE   = "2026-06-05"
 
 # ── Directories ──────────────────────────────────────────────────────────
 ROOT_DIR     = Path(__file__).resolve().parent.parent   # fin2/

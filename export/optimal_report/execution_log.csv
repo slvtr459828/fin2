@@ -1,0 +1,7 @@
+#,Date,Session,Action,Symbol,Shares,Price,Value,Return,Rationale
+1,2026-05-20,ATO,SELL,SIP,"2,700","52,000","140,400,000",,Cut-loss -3.7%. RSI 32 below BB Lower. Industrial RE sector losing capital flows. No recovery catalyst.
+2,2026-05-20,ATO,SELL,VHC,"1,800","58,000","104,400,000",,Cut-loss -3.3%. RSI 38. Declining volume. Foreign net selling pressure on seafood sector.
+3,2026-05-20,ATO,SELL,FPT,900,"77,000","69,300,000",,"Trim 20% at technical peak. RSI 68.5 touching Upper BB. Take profit +2.5%. Retain 3,600 shares as anchor."
+4,2026-05-20,ATO,SELL,VTP,500,"70,000","35,000,000",,"Trim 20% at technical peak. RSI 72.4 overbought. Retain 2,000 shares."
+5,2026-05-20,ATC,SELL,CTR,300,"95,000","28,500,000",,"Trim 20% at technical peak. RSI 81.2 extreme overbought. Retain 1,600 shares."
+6,2026-05-20,ATC,BUY,ACB,"16,600","22,650","375,990,000",+14.8%,"ALL-IN Banking. ACB at trough: RSI 44.2, BB Lower, Volume 1.9x MA20. Banking sector +8.2% led by SBV credit room expansion + FTSE upgrade catalyst. Hold through 5/6 close."

@@ -1,14 +1,14 @@
 === CVaR RISK REPORT ===
-Date: 2026-05-27 15:46
+Date: 2026-06-05 22:52
 
-Portfolio: FPT, CTR, VTP, DGW, VHC
+Portfolio: VTP, IMP, FPT, VHC, SCS
 
-Expected 30d return: +2.14%
-VaR 95% (30d):       -13.43%
-CVaR 95% (30d):      -16.85%
-P(loss):             43.1%
+Expected 30d return: +0.58%
+VaR 95% (30d):       -12.16%
+CVaR 95% (30d):      -14.87%
+P(loss):             48.7%
 
 --- KHUYẾN NGHỊ ---
 Trong trường hợp tồi tệ nhất (5% đuôi phân phối),
-danh mục dự kiến sụt giảm 16.85% trong 30 phiên.
-Stop-loss khuyến nghị: -33.70% (2× CVaR).
+danh mục dự kiến sụt giảm 14.87% trong 30 phiên.
+Stop-loss khuyến nghị: -29.75% (2× CVaR).

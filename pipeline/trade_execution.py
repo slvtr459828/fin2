@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.dates as mdates
-from vnstock_data import Market
+from vnstock import Market
 
 from pipeline.config import EXPORT_DIR, ensure_dirs
 
@@ -21,7 +21,7 @@ REPORT_DIR = EXPORT_DIR / "execution_report"
 REPORT_DIR.mkdir(parents=True, exist_ok=True)
 
 START = "2026-04-20"
-END   = "2026-05-11"
+END   = "2026-06-05"
 TOTAL_CAPITAL = 911_000_000
 
 OLD_STOCKS = ["FPT", "SZC", "DGC", "FTS", "VPB"]

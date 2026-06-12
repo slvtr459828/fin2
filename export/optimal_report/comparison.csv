@@ -1,0 +1,4 @@
+Scenario,Value_20_4,Value_20_5,Value_05_6,Delta_4_6,Delta_5_6
+"A: Hold Old PF (5 original stocks, no restructuring)","902,000,000","860,000,000","826,000,000",-8.4%,-4.0%
+"B: Report PF (Core-Satellite, passive hold)",—,"946,800,000","919,400,000",—,-2.9%
+"C: Optimal PF (cut losses + ALL-IN ACB, hold to 5/6)",—,"946,800,000","982,410,000",—,+3.8%

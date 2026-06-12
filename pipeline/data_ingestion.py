@@ -14,7 +14,7 @@ from typing import Optional
 import numpy as np
 import pandas as pd
 
-from vnstock_data import Market, Reference
+from vnstock import Market, Reference
 
 from pipeline.config import (
     START_DATE, END_DATE, TRADING_DAYS,
@@ -65,16 +65,21 @@ def _append_to_parquet(symbol: str, df: pd.DataFrame):
     df_out = df_out.reset_index()
     if CACHE_OHLCV.exists():
         existing = pd.read_parquet(CACHE_OHLCV)
+        # Remove old rows for this symbol (for incremental updates)
+        existing = existing[existing["symbol"] != symbol]
         combined = pd.concat([existing, df_out], ignore_index=True)
     else:
         combined = df_out
     combined.to_parquet(CACHE_OHLCV, index=False)
 
 
-def fetch_single_stock(symbol: str, sleep: float = 0.3) -> Optional[pd.DataFrame]:
+def fetch_single_stock(symbol: str, sleep: float = 0.3,
+                       start: str = None, end: str = None) -> Optional[pd.DataFrame]:
     try:
         mkt = Market()
-        df = mkt.equity(symbol).ohlcv(start=START_DATE, end=END_DATE)
+        sd = start or START_DATE
+        ed = end or END_DATE
+        df = mkt.equity(symbol).ohlcv(start=sd, end=ed)
         if df is None or df.empty:
             return None
         time.sleep(sleep)
@@ -87,12 +92,12 @@ def fetch_single_stock(symbol: str, sleep: float = 0.3) -> Optional[pd.DataFrame
 
 
 def fetch_vn100_ohlcv(symbols: list[str]) -> dict[str, pd.DataFrame]:
-    """Kéo toàn bộ OHLCV với checkpoint resume."""
+    """Kéo OHLCV với incremental fetch: chỉ fetch dữ liệu mới nếu cache cũ hơn END_DATE."""
     cache: dict[str, pd.DataFrame] = {}
     ck = _load_checkpoint()
-    already_done = set(ck["done"])
 
-    if CACHE_OHLCV.exists() and len(already_done) >= len(symbols):
+    # Load existing cache
+    if CACHE_OHLCV.exists():
         print(f"[M1] 📂 Load cache OHLCV từ {CACHE_OHLCV}")
         all_df = pd.read_parquet(CACHE_OHLCV)
         for sym in all_df["symbol"].unique():
@@ -105,45 +110,53 @@ def fetch_vn100_ohlcv(symbols: list[str]) -> dict[str, pd.DataFrame]:
             sub = sub.sort_index()
             cache[sym] = sub
         print(f"   Đã load {len(cache)} mã.")
+
+    # Check if we need to fetch new data
+    need_fetch = []
+    need_update = []
+    for sym in symbols:
+        if sym in cache and not cache[sym].empty:
+            last_date = cache[sym].index.max()
+            end_dt = pd.Timestamp(END_DATE)
+            if last_date < end_dt - pd.Timedelta(days=1):
+                need_update.append(sym)
+        elif sym not in cache:
+            need_fetch.append(sym)
+
+    if not need_fetch and not need_update:
+        print(f"[M1] ✅ Cache up-to-date ({len(cache)} mã).")
         return cache
 
-    pending = [s for s in symbols if s not in already_done]
-    if CACHE_OHLCV.exists():
-        all_df = pd.read_parquet(CACHE_OHLCV)
-        for sym in all_df["symbol"].unique():
-            sub = all_df[all_df["symbol"] == sym].drop(columns="symbol").copy()
-            if "time" in sub.columns:
-                sub["time"] = pd.to_datetime(sub["time"])
-                sub = sub.set_index("time")
-            else:
-                sub.index = pd.to_datetime(sub.index)
-            sub = sub.sort_index()
-            cache[sym] = sub
+    if need_update:
+        print(f"[M1] 📡 Incremental fetch {len(need_update)} mã "
+              f"(dữ liệu mới từ ~{cache[need_update[0]].index.max().date()} → {END_DATE})...")
 
-    if not pending:
-        print(f"[M1] ✅ Tất cả {len(symbols)} mã đã được fetch.")
-        return cache
-
-    print(f"[M1] 📡 Kéo OHLCV {len(pending)} mã ({START_DATE} → {END_DATE})...")
-    success = len(already_done)
+    all_pending = need_fetch + need_update
+    success = 0
     fail = 0
-    done = list(already_done)
 
-    for i, sym in enumerate(pending):
-        df = fetch_single_stock(sym)
+    for i, sym in enumerate(all_pending):
+        df = fetch_single_stock(sym, sleep=0.5)
         if df is not None and not df.empty:
-            cache[sym] = df
-            _append_to_parquet(sym, df)
-            done.append(sym)
-            _save_checkpoint(done)
+            if sym in cache and sym in need_update:
+                # Merge: keep old + new, deduplicate by date
+                old_df = cache[sym]
+                combined = pd.concat([old_df, df]).sort_index()
+                combined = combined[~combined.index.duplicated(keep='last')]
+                cache[sym] = combined
+                # Rebuild full cache parquet
+                _append_to_parquet(sym, combined)
+            else:
+                cache[sym] = df
+                _append_to_parquet(sym, df)
             success += 1
-            print(f"  [{i+1}/{len(pending)}] {sym} ✓ ({len(df)} dòng)")
+            print(f"  [{i+1}/{len(all_pending)}] {sym} ✓ "
+                  f"({'new' if sym in need_fetch else f'+{len(df)}d'})")
         else:
             fail += 1
-            print(f"  [{i+1}/{len(pending)}] {sym} ✗")
+            print(f"  [{i+1}/{len(all_pending)}] {sym} ✗")
 
-    _save_checkpoint(done)
-    print(f"[M1] ✅ Done: {success} OK, {fail} fail.")
+    print(f"[M1] ✅ Done: {success} OK, {fail} fail. Total cache: {len(cache)} mã.")
     return cache
 
 
@@ -277,35 +290,58 @@ def compute_excess_returns(
 
 def fetch_fundamentals(symbols: list[str]) -> pd.DataFrame:
     """
-    Fetch Market Cap + P/B + P/E via Market().equity(sym).summary() [KBS].
-    Returns market_cap, pb, pe, beta, eps, roe.
-    Falls back to volume×close mcap proxy if summary fails.
+    vnstock 4.x API:
+    - P/B, P/E, ROE from Fundamental().equity(sym).ratio()
+    - Market Cap proxy: batch quote close_price × volume_accumulated (size ranking)
+      Exact market cap not needed for FF3 median-split size sort.
     Returns DataFrame index=symbol.
     """
-    print(f"[M1] 📡 Fetch fundamentals for {len(symbols)} symbols (summary API)...")
+    import time as _time
+    from vnstock import Fundamental, Market
+
+    print(f"[M1] 📡 Fetch fundamentals for {len(symbols)} symbols...")
+    fun = Fundamental()
     mkt = Market()
+
+    # 1) Batch quote: close_price + volume for size proxy (1 API call)
+    print(f"   Fetching batch quote...")
+    quotes = mkt.quote(symbols)
+    quotes["mcap_proxy"] = quotes["close_price"].astype(float) * quotes["volume_accumulated"].astype(float)
+    close_map = dict(zip(quotes["symbol"], quotes["close_price"]))
+    mcap_map = dict(zip(quotes["symbol"], quotes["mcap_proxy"]))
+    print(f"   Got {len(quotes)} quotes.")
+
+    # 2) Per-symbol: ratio API for P/B, P/E, ROE (1 call/symbol = 98 calls total)
+    # Need 0.5s delay to stay under 180 req/min
     records = {}
     for i, sym in enumerate(symbols):
         try:
-            df = mkt.equity(sym).summary()
-            if df is not None and not df.empty:
-                row = df.iloc[0]
+            df_ratio = fun.equity(sym).ratio()
+            if df_ratio is not None and not df_ratio.empty:
+                ratio_map = {}
+                for _, row in df_ratio.iterrows():
+                    ratio_map[row["item_id"]] = row.get("2026-Q1", np.nan)
                 records[sym] = {
-                    "market_cap": row.get("market_cap", np.nan),
-                    "pb":         row.get("pb", np.nan),
-                    "pe":         row.get("pe", np.nan),
-                    "eps":        row.get("eps", np.nan),
-                    "roe":        row.get("roe", np.nan),
+                    "market_cap": mcap_map.get(sym, np.nan),
+                    "pb":         ratio_map.get("pb_ratio", np.nan),
+                    "pe":         ratio_map.get("pe_ratio", np.nan),
+                    "eps":        ratio_map.get("trailing_eps", np.nan),
+                    "roe":        ratio_map.get("roe_trailling", np.nan),
                 }
         except Exception:
             pass
-        if (i + 1) % 20 == 0:
-            print(f"   ... {i+1}/{len(symbols)}")
 
-    if not records:
-        raise RuntimeError("Không thể fetch fundamental data.")
+        # Delay between calls to stay under 180 req/min bronze limit
+        _time.sleep(0.5)
+
+        if (i + 1) % 20 == 0:
+            print(f"   ... {i+1}/{len(symbols)} (collected {len(records)})")
+
+    if len(records) < 20:
+        raise RuntimeError(f"Không thể fetch fundamental data — chỉ có {len(records)} mã.")
 
     df = pd.DataFrame.from_dict(records, orient="index")
+    df = df.dropna(subset=["pb"])
     print(f"[M1] ✅ Fundamentals: {len(df)} symbols, "
           f"MCap={df['market_cap'].notna().sum()}/{len(df)}, "
           f"P/B={df['pb'].notna().sum()}/{len(df)}")

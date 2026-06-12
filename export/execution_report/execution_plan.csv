@@ -1,10 +1,10 @@
 Execution Date,Session,Action,Ticker,Volume (Shares),Strategic Rationale & Slippage Control
-"April 20, 2026",ATO,SELL,SZC,6000,Full exit. Open-to-Close slippage minimized at -1.09%.
-"April 20, 2026",ATO,SELL,FTS,5000,Full exit. Open-to-Close slippage minimized at -0.91%.
-"April 23, 2026",ATC,BUY,SIP,2900,Initial satellite deployment. Executed on technical support. Slippage at -0.20%.
-"May 06, 2026",ATO,SELL,DGC,3000,Full exit. Executed into structural strength (-0.64% slippage).
-"May 07, 2026",ATO,SELL,VPB,5000,Full exit. Open-to-Close slippage minimized at -0.13%.
-"May 07, 2026",ATC,BUY,VHC,1800,Satellite deployment into defensive export sector. Slippage at -0.28%.
-"May 11, 2026",ATC,BUY,VTP,2500,Satellite deployment capturing logistics growth factor. Slippage at -0.96%.
-"May 11, 2026",ATC,BUY,CTR,1900,Satellite deployment capturing telecom infrastructure factor. Slippage at -0.53%.
-"May 11, 2026",ATC,BUY MORE,FPT,500,Final top-up to lock the defensive anchor weight at 35.11%. Slippage at -0.60%.
+"April 20, 2026",ATO,SELL,SZC,6000,Full exit. Open-to-Close slippage minimized at -0.89%.
+"April 20, 2026",ATO,SELL,FTS,5000,Full exit. Open-to-Close slippage minimized at -0.47%.
+"May 06, 2026",ATO,SELL,DGC,3000,Full exit. Executed into structural strength (-0.53% slippage).
+"May 11, 2026",ATC,BUY,VTP,2500,Satellite deployment capturing logistics growth factor. Slippage at -0.61%.
+"May 11, 2026",ATC,BUY,CTR,1900,Satellite deployment capturing telecom infrastructure factor. Slippage at -0.36%.
+"May 11, 2026",ATC,BUY MORE,FPT,600,Final top-up to lock the defensive anchor weight at 35.11%. Slippage at -0.07%.
+"May 14, 2026",ATO,SELL,VPB,5000,Full exit. Open-to-Close slippage minimized at -0.17%.
+"June 02, 2026",ATC,BUY,SIP,3100,Initial satellite deployment. Executed on technical support. Slippage at -0.43%.
+"June 05, 2026",ATC,BUY,VHC,1900,Satellite deployment into defensive export sector. Slippage at -0.44%.

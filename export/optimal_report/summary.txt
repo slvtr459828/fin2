@@ -1,0 +1,48 @@
+EXECUTIVE SUMMARY — OPTIMAL PORTFOLIO: PLAN A
+═══════════════════════════════════════════════════════
+
+STRATEGY
+────────
+  Window:            20/5/2026 → 5/6/2026 (12 sessions)
+  Starting value:     946,800,000 VND
+  Ending value:       982,410,000 VND
+  Return:             +35,610,000 VND (+3.8%)
+  Total trades:       6 (5 sells + 1 buy)
+  Trading days:       1 (20/5/2026)
+
+THESIS
+──────
+  Banking was the only sector with positive momentum (+8.2%)
+  during the window. SBV credit room expansion and FTSE
+  upgrade expectations drove institutional flows into banks.
+  ACB led the sector (+14.8%) with highest CAR ratio (13%+).
+
+EXECUTION (all on 20/5/2026)
+─────────────────────────────
+  ATO: SELL SIP  2,700 cp × 52,000 = 140,400,000
+  ATO: SELL VHC  1,800 cp × 58,000 = 104,400,000
+  ATO: SELL FPT    900 cp × 77,000 = 69,300,000
+  ATO: SELL VTP    500 cp × 70,000 = 35,000,000
+  ATC: SELL CTR    300 cp × 95,000 = 28,500,000
+  ATC: BUY  ACB 16,600 cp × 22,650 = 375,990,000
+
+  11 sessions: HOLD. No further trades.
+
+FINAL PORTFOLIO (5/6/2026)
+───────────────────────────
+  ACB  16,600 cp × 26,000 = 431,600,000  (43.9%)
+  FPT   3,600 cp × 75,000 = 270,000,000  (27.5%)
+  CTR   1,600 cp × 92,000 = 147,200,000  (15.0%)
+  VTP   2,000 cp × 66,000 = 132,000,000  (13.4%)
+  CASH                       1,610,000
+  ────────────────────────────────────────
+  TOTAL                    982,410,000
+
+PERFORMANCE
+───────────
+  Old PF (hold original):        826,000,000  (-8.4% from 20/4)
+  Report PF (passive):           919,400,000  (-2.9% from 20/5)
+  Optimal PF (active):           982,410,000  (+3.8% from 20/5)
+
+  Alpha vs. Old PF:    +156,410,000 VND
+  Alpha vs. Report PF:  +63,010,000 VND
